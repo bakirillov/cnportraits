@@ -1,6 +1,7 @@
 # cnportraits - an implementation of Complex Network portraits algorithm    
       
-Original algorithm was introduced by Bagrow, Bollt, Scufca and ben-Abraham in https://arxiv.org/abs/cond-mat/0703470v2
+Original algorithm was introduced by Bagrow, Bollt, Scufca and ben-Abraham in https://arxiv.org/abs/cond-mat/0703470v2   
+Examples are given in the "Complex Network Portraits.ipynb" file.
 
 usage: cnportraits.py [-h] Graph Portrait Mode    
     
