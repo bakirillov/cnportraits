@@ -90,8 +90,8 @@ def crop(ps):
     miny = min(ps, key=minyK).B.shape[0]
     minx = min(ps, key=minxK).B.shape[1]
     for a in ps:
-        ps.B = ps.B[:miny,:minx]
-    return(ps.B)
+        a.B = a.B[:miny,:minx]
+    return(ps)
     
 
 def startDrawing(args):
