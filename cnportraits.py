@@ -25,10 +25,12 @@ import argparse
 import numpy as np
 import igraph as ig
 import matplotlib.pyplot as plt
+from os import walk, path, mkdir
 
+GRAPH_EXTS = ["ncol", "graphml", "gml", "dot", "gv", "lgl", "net"]
 
 class Portrait():
-    
+
     def __init__(self, graph):
         self.g = graph
 
@@ -42,7 +44,7 @@ class Portrait():
         return(
             np.array([[lg[a,:]]*n for a in range(lg.shape[0])]).flatten().reshape((n*y, x))
         )
-        
+
     def compute(self):
         """Compute portrait matrix (B)"""
         d = self.g.diameter()#Network diameter
@@ -65,7 +67,7 @@ class Portrait():
                 nsPrev = ns
                 self.B[l, ns] += 1
         self.B = self.B[:maxPath+1,:]#get the meaningful part of the matrix
-        
+
     def draw(self):
         """Draw the portrait"""
         k = Portrait.b2p(self.B)
@@ -80,7 +82,7 @@ class Portrait():
     def savePicture(self, fn):
         """Save the portrait as picture"""
         plt.savefig(fn)
-        
+
 def startDrawing(args):
     """Portrait drawing routine"""
     P = Portrait(ig.load(args.graphF))
@@ -91,27 +93,70 @@ def startDrawing(args):
         P.draw()
         P.savePicture(args.outputF)
 
+def startAnimating(args):
+    """Animation routine. Currently outputs only jpeg frames instead of gif"""
+    #global GRAPH_EXTS
+    isgraph = lambda x: True if x.split(".")[-1] in GRAPH_EXTS else False
+    files = list(
+        map(
+            lambda x: path.join(args.workingD, x),
+            [a for a in walk(args.workingD)][0][2]
+        )
+    )
+    portraits = [Portrait(ig.load(a)) for a in list(filter(isgraph, files))]
+    pth = path.split(args.workingD)
+    outDir = path.join(pth[0], pth[1]+"_animated")
+    if not path.exists(outDir):
+        mkdir(outDir)
+    for i,a in enumerate(portraits):
+        a.compute()
+        a.draw()
+        a.savePicture(path.join(outDir, str(i)+".png"))
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument(
+    subparsers = parser.add_subparsers(
+        help="Functions"
+    )
+    draw_parser = subparsers.add_parser(
+        "draw", help="Draw a portrait for complex network"
+    )
+    draw_parser.add_argument(
         "graphF",
         metavar="Graph",
         action="store",
         help="Input file"
     )
-    parser.add_argument(
+    draw_parser.add_argument(
         "outputF",
         metavar="Portrait",
         action="store",
         help="Output picture or matrix"
     )
-    parser.add_argument(
+    draw_parser.add_argument(
         "modeV",
         metavar="Mode",
         action="store",
         help="Output mode",
         choices=["matrix", "picture"]
     )
-    parser.set_defaults(func=startDrawing)
+    draw_parser.set_defaults(func=startDrawing)
+    anim_parser = subparsers.add_parser(
+        "animate", help="Compute an animation of a set of networks"
+    )
+    anim_parser.add_argument(
+        "workingD",
+        metavar="Directory",
+        action="store",
+        help="Input directory"
+    )
+    anim_parser.add_argument(
+        "durationV",
+        metavar="Duration",
+        action="store",
+        help="Duration of animation (Currently ignored)"
+    )
+    anim_parser.set_defaults(func=startAnimating)
     args = parser.parse_args()
-    startDrawing(args)
+    args.func(args)
