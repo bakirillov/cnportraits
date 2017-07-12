@@ -83,6 +83,17 @@ class Portrait():
         """Save the portrait as picture"""
         plt.savefig(fn)
 
+def crop(ps):
+    """Crops a list of portraits to (minY, minX) shape"""
+    minyK = lambda x: x.B.shape[0]
+    minxK = lambda x: x.B.shape[1]
+    miny = min(ps, key=minyK).B.shape[0]
+    minx = min(ps, key=minxK).B.shape[1]
+    for a in ps:
+        ps.B = ps.B[:miny,:minx]
+    return(ps.B)
+    
+
 def startDrawing(args):
     """Portrait drawing routine"""
     P = Portrait(ig.load(args.graphF))
