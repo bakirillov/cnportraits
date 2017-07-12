@@ -3,7 +3,8 @@
 Original algorithm was introduced by Bagrow, Bollt, Scufca and ben-Abraham in https://arxiv.org/abs/cond-mat/0703470v2   
 Examples are given in the "Complex Network Portraits.ipynb" file.
 
-Overall usage: cnportraits.py [-h] {draw,animate} ...   
+#### Overall usage    
+cnportraits.py [-h] {draw,animate} ...   
 
 positional arguments:   
 *  {draw,animate}  Functions   
@@ -13,14 +14,16 @@ positional arguments:
 optional arguments:    
 *  -h, --help      show this help message and exit    
 
-Drawing: cnportraits.py draw [-h] Graph Portrait Mode    
+#### Drawing    
+cnportraits.py draw [-h] Graph Portrait Mode    
 
 positional arguments:    
 *  Graph       Input file    
 *  Portrait    Output picture or matrix    
 *  Mode        Output mode    
 
-Animating: cnportraits.py animate [-h] Directory Duration     
+#### Animating  
+cnportraits.py animate [-h] Directory Duration     
 
 positional arguments:   
 *  Directory   Input directory    
