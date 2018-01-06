@@ -27,9 +27,7 @@ cnportraits.py animate [-h] Directory Duration
 
 positional arguments:   
 *  Directory   Input directory    
-*  Duration    Duration of animation (Currently ignored)    
+*  FPS         FPS of animation    
 
 ## To do:
 1. Distance computation as described in the paper;   
-2. Animation of portrait changes given changes in the network structure;   
-    * get the proper .gif generation working;  
