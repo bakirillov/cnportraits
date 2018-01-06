@@ -4,7 +4,7 @@ This is an implementation of an algorithm proposed in
 Arxiv link of their paper: https://arxiv.org/abs/cond-mat/0703470v2
 
 Author of implementation:
-Bogdan Kirillov (8k1r1ll0v@gmail.com, bakirillov@edu.hse.ru)
+Bogdan Kirillov (8k1r1ll0v@gmail.com, Bogdan.Kirillov@skoltech.ru)
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,10 +24,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import argparse
 import numpy as np
 import igraph as ig
+from tqdm import tqdm
 import matplotlib.pyplot as plt
-from os import walk, path, mkdir
+from os import walk, path, mkdir, remove
+from moviepy.editor import ImageSequenceClip
 
 GRAPH_EXTS = ["ncol", "graphml", "gml", "dot", "gv", "lgl", "net"]
+
 
 class Portrait():
 
@@ -68,32 +71,19 @@ class Portrait():
                 self.B[l, ns] += 1
         self.B = self.B[:maxPath+1,:]#get the meaningful part of the matrix
 
-    def draw(self):
-        """Draw the portrait"""
+    def savePicture(self, fn):
+        """Draw the portrait and save it to file"""
         k = Portrait.b2p(self.B)
-        self.I = plt.imshow(
+        plt.imshow(
             k, interpolation="nearest"
         )
+        plt.savefig(fn)
+        plt.close()
 
     def saveMatrix(self, fn):
         """Save the matrix B as B.npy"""
         np.save(fn, self.B)
-
-    def savePicture(self, fn):
-        """Save the portrait as picture"""
-        plt.savefig(fn)
-
-def crop(ps):
-    """Crops a list of portraits to (minY, minX) shape"""
-    minyK = lambda x: x.B.shape[0]
-    minxK = lambda x: x.B.shape[1]
-    miny = min(ps, key=minyK).B.shape[0]
-    minx = min(ps, key=minxK).B.shape[1]
-    for a in ps:
-        a.B = a.B[:miny,:minx]
-    return(ps)
     
-
 def startDrawing(args):
     """Portrait drawing routine"""
     P = Portrait(ig.load(args.graphF))
@@ -101,28 +91,30 @@ def startDrawing(args):
     if args.modeV == "matrix":
         P.saveMatrix(args.outputF)
     elif args.modeV == "picture":
-        P.draw()
         P.savePicture(args.outputF)
 
 def startAnimating(args):
-    """Animation routine. Currently outputs only jpeg frames instead of gif"""
-    #global GRAPH_EXTS
+    """Animation routine"""
     isgraph = lambda x: True if x.split(".")[-1] in GRAPH_EXTS else False
     files = list(
-        map(
-            lambda x: path.join(args.workingD, x),
+        filter(
+            isgraph, 
+            list(map(lambda x: path.join(args.workingD, x),
             [a for a in walk(args.workingD)][0][2]
         )
-    )
-    portraits = [Portrait(ig.load(a)) for a in list(filter(isgraph, files))]
-    pth = path.split(args.workingD)
-    outDir = path.join(pth[0], pth[1]+"_animated")
-    if not path.exists(outDir):
-        mkdir(outDir)
-    for i,a in enumerate(portraits):
-        a.compute()
-        a.draw()
-        a.savePicture(path.join(outDir, str(i)+".png"))
+    )))
+    print("Computing portraits")
+    files = sorted(files, key=lambda x: int(path.split(x)[-1].split(".")[0]))
+    for a in tqdm(files):
+        g = ig.load(a)
+        p = Portrait(g)
+        p.compute()
+        p.savePicture(a+".temp.png")
+    temps = [a+".temp.png" for a in files]
+    clip = ImageSequenceClip(temps, fps=int(args.fpsV))
+    clip.write_gif(args.workingD+".gif")
+    for a in temps:
+        remove(a)
 
 
 if __name__ == "__main__":
@@ -163,10 +155,10 @@ if __name__ == "__main__":
         help="Input directory"
     )
     anim_parser.add_argument(
-        "durationV",
-        metavar="Duration",
+        "fpsV",
+        metavar="fps",
         action="store",
-        help="Duration of animation (Currently ignored)"
+        help="FPS of animation"
     )
     anim_parser.set_defaults(func=startAnimating)
     args = parser.parse_args()
